@@ -25,3 +25,11 @@ echo "Creating a VPC"
 VPC_ID=`aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query Vpc.VpcId --output text`
 echo "Successfully created a VPC: $VPC_ID"
 ```
+## Creating a Subnet
+A subnet is a logical grouping of IP addresses. We usually assign a set of IP addresses in that subnet to resources like instances.
+```bash
+echo "Creating a subnet"
+
+SUBNET_ID=`aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.0.1.0/24 --query Subnet.SubnetId --output text` 
+echo "Successfully created a subnet: $SUBNET_ID"
+```
