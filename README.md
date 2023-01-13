@@ -45,3 +45,48 @@ echo "Attaching this internet gateway to our VPC"
 
 aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $INTERNET_GATEWAY_ID
 ```
+## Creating a Route
+We have created the VPC, subnet, and internet gateway; the next thing on our list is a route. A route enables network traffic flow between our instances in the subnet to the internet via an internet gateway. Multiple routes make up a route table. Each subnet is associated with a set of routes.
+```bash
+echo "Configuring route table"
+ROUTE_TABLE_ID=`aws ec2 create-route-table --vpc-id $VPC_ID --query RouteTable.RouteTableId --output text`
+echo "Successfully created route table: $ROUTE_TABLE_ID"
+echo "Adding a route"
+aws ec2 create-route --route-table-id $ROUTE_TABLE_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $INTERNET_GATEWAY_ID
+echo "Successfully added a route"
+echo "Associate the route table with the subnet"
+aws ec2 associate-route-table --subnet-id $SUBNET_ID --route-table-id $ROUTE_TABLE_ID
+echo "Successfully associated the route table with the subnet"
+```
+## Create a Security Group
+In this step, we'll create a new security group and add a couple of rules so the incoming and outgoing traffic is controlled as per a policy.
+```bash
+echo "Creating a new security group"
+
+SECURITY_GROUP_NAME=$username-security-group
+SECURITY_GROUP=`aws ec2 create-security-group --vpc-id $VPC_ID  --group-name $SECURITY_GROUP_NAME --description "My $SECURITY_GROUP_NAME security group" --region us-east-1 --output text`
+echo "New security group $SECURITY_GROUP was created successfully"
+```
+## Add Inbound Rules
+A security group allows or disallows all network traffic to and from the instance. It consists of a set of rules that dictate what ports are open and what protocols (e.g., SSH, TCP, Telnet) are permitted.
+
+In our current use case, we do not expect our instance to communicate with any other resources (like a database or other EC2 instances). As such, we can allow outbound traffic to remain curtailed by opting not to add any outbound rules to the security group.
+
+However, we do want to connect to the instance via port 22 over SSH protocol. That means we must create a new inbound rule that permits SSH traffic on port 22. This rule will be added to the security group, which will then let us communicate with the instance by SSHing into it.
+```bash
+echo "Adding a TCP rule for SSH connectivity for remote access"
+aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP --protocol tcp  --port 22 --cidr 0.0.0.0/0 --region us-east-1
+echo "The SSH connectivity for remote access is enabled"
+```
+## Creating an Instance
+In the previous steps, we completed all the prerequisites required for creating an EC2 instance. Now it is time to create our instance.
+```bash
+echo "Creating a new EC2 instance..."
+KEY_NAME=my-lab04-keypair
+
+echo "Key is $KEY_NAME"
+
+INSTANCE_ID=`aws ec2 run-instances --image-id ami-09d3b3274b6c5d4aa --instance-type t2.micro --key-name $KEY_NAME --security-group-ids $SECURITY_GROUP --subnet-id $SUBNET_ID --associate-public-ip-address --count 1 --query 'Instances[0].InstanceId' --output text --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=my-ec2-instance}]'`
+
+echo "Instance with ID $INSTANCE_ID was created successfully"
+```
