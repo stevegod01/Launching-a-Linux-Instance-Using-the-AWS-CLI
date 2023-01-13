@@ -33,3 +33,15 @@ echo "Creating a subnet"
 SUBNET_ID=`aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.0.1.0/24 --query Subnet.SubnetId --output text` 
 echo "Successfully created a subnet: $SUBNET_ID"
 ```
+## Creating an Internet Gateway
+An internet gateway permits our resources in the VPC to talk to external resources on the internet. With the following command, we'll create an internet gateway and attach it to our VPC:
+```bash
+echo "Configuring an internet gateway"
+
+INTERNET_GATEWAY_ID=`aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text`
+
+echo "Successfully created an internet gateway: $INTERNET_GATEWAY_ID"
+echo "Attaching this internet gateway to our VPC"
+
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $INTERNET_GATEWAY_ID
+```
