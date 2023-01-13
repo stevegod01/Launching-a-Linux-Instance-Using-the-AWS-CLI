@@ -16,3 +16,12 @@ aws ec2 create-key-pair --key-name my-lab04-keypair --key-type rsa --key-format 
 echo "Key pair was successfully created"
 ```
 Execute this command to create a new my-lab04-keypair key, or adjust the command to create a key using the name of your choice. The public key is automatically uploaded to AWS, while the private key is written to a file (my-lab04-keypair.pem) in the local directory. To check this, issue ls -latr at the command prompt—you should see the file containing our newly created key pair in the list.
+
+## Creating a VPC
+A virtual private cloud is a private network that will help segregate and construct a portion of the AWS Cloud for our purposes. All resources that we create must be present in a VPC.
+```bash
+echo "Creating a VPC"
+
+VPC_ID=`aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query Vpc.VpcId --output text`
+echo "Successfully created a VPC: $VPC_ID"
+```
